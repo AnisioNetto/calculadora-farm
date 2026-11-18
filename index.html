@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101112">
+  <meta name="description" content="Calculadora de materiais e rotas de farm — Morro dos Caveiras.">
+  <title>Calculadora de Farm | Morro dos Caveiras</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101112;
+      --panel: #191b1e;
+      --panel-2: #202327;
+      --line: rgba(255,255,255,.09);
+      --text: #f2f3f4;
+      --muted: #a1a6ad;
+      --red: #c82e3b;
+      --red-2: #8e202b;
+      --green: #57c58b;
+      --amber: #e7b75a;
+      --danger: #ff6f79;
+      --radius: 18px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(200,46,59,.16), transparent 34rem),
+        radial-gradient(ellipse at 100% 65%, rgba(200,46,59,.08), transparent 28rem),
+        var(--bg);
+    }
+    .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px; }
+    .brand { display:flex; align-items:center; gap:13px; min-width:0; }
+    .mark {
+      display:grid; place-items:center; width:48px; height:48px; border-radius:14px;
+      color:white; font-weight:900; letter-spacing:-2px; font-size:19px;
+      background: linear-gradient(145deg, #d43b49, #711923); border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 8px 26px rgba(200,46,59,.22);
+    }
+    .eyebrow { color:#ef8990; font-size:10px; letter-spacing:.2em; font-weight:800; text-transform:uppercase; }
+    h1 { font-size:clamp(22px, 3vw, 30px); letter-spacing:-.04em; margin:3px 0 0; line-height:1.1; }
+    .live-pill { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:999px; border:1px solid var(--line); color:#cdd0d4; font-size:12px; white-space:nowrap; background:rgba(255,255,255,.035); }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px rgba(87,197,139,.7); }
+    .intro { margin-bottom:22px; }
+    .intro p { color:var(--muted); margin:7px 0 0; line-height:1.55; font-size:14px; max-width:720px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr); gap:18px; align-items:start; }
+    .panel { background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 18px 50px rgba(0,0,0,.24); overflow:hidden; }
+    .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:20px 21px 16px; border-bottom:1px solid var(--line); }
+    .panel-head h2 { margin:0; font-size:16px; letter-spacing:-.02em; }
+    .panel-head p { margin:5px 0 0; color:var(--muted); font-size:12px; line-height:1.45; }
+    .step { color:#f09ba1; border:1px solid rgba(200,46,59,.35); background:rgba(200,46,59,.12); border-radius:8px; padding:5px 8px; font-weight:800; font-size:10px; white-space:nowrap; }
+    .fields { padding:18px 21px 20px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .field { display:flex; flex-direction:column; gap:7px; min-width:0; }
+    .field label { display:flex; justify-content:space-between; align-items:center; gap:8px; color:#e5e7e9; font-size:12px; font-weight:700; }
+    .unit { color:var(--muted); font-size:10px; font-weight:500; }
+    input[type=number] {
+      width:100%; appearance:textfield; background:#111315; border:1px solid rgba(255,255,255,.12); color:white;
+      border-radius:11px; padding:13px 13px; font:700 16px/1.1 ui-monospace, SFMono-Regular, Menlo, monospace; outline:none; transition:.18s;
+    }
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button { appearance:none; margin:0; }
+    input[type=number]:focus { border-color:rgba(220,75,87,.8); box-shadow:0 0 0 3px rgba(200,46,59,.14); }
+    .field small { color:#777e87; font-size:10px; }
+    .input-actions { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:4px; }
+    button { font:700 12px/1.1 inherit; cursor:pointer; border:0; border-radius:10px; padding:11px 14px; transition:transform .15s, background .15s, border-color .15s; }
+    button:active { transform:translateY(1px); }
+    .btn-primary { color:white; background:linear-gradient(135deg, #d5414d, #a52230); box-shadow:0 7px 18px rgba(200,46,59,.18); }
+    .btn-primary:hover { background:linear-gradient(135deg, #e24b57, #b72b39); }
+    .btn-quiet { color:#d0d3d7; background:#282b30; border:1px solid var(--line); }
+    .btn-quiet:hover { background:#32363c; }
+    .btn-link { padding:8px 2px; color:#d18a91; background:transparent; }
+    .results { padding:19px 20px 20px; }
+    .total-box { padding:16px; border-radius:14px; background:linear-gradient(130deg, rgba(200,46,59,.19), rgba(200,46,59,.055)); border:1px solid rgba(200,46,59,.3); margin-bottom:13px; }
+    .total-box .label { color:#f0a4aa; text-transform:uppercase; letter-spacing:.12em; font-size:10px; font-weight:800; }
+    .total-value { font-size:clamp(34px,5vw,43px); line-height:1; margin-top:8px; font-weight:900; letter-spacing:-.055em; font-variant-numeric:tabular-nums; }
+    .total-caption { margin-top:7px; color:#c6aeb1; font-size:11px; }
+    .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .metric { background:rgba(255,255,255,.035); border:1px solid var(--line); border-radius:13px; padding:13px; min-width:0; }
+    .metric .m-label { color:var(--muted); font-size:10px; line-height:1.35; }
+    .metric .m-value { margin-top:7px; font-size:23px; font-weight:850; letter-spacing:-.04em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+    .metric .m-sub { margin-top:4px; color:#8d949d; font-size:10px; }
+    .progress-wrap { margin-top:13px; padding:14px; background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:13px; }
+    .progress-top { display:flex; justify-content:space-between; gap:10px; color:#dfe1e4; font-size:11px; font-weight:700; }
+    .progress-track { height:8px; margin-top:10px; border-radius:20px; overflow:hidden; background:#33373d; }
+    .progress-fill { height:100%; width:0; border-radius:20px; background:linear-gradient(90deg, #a92331, #ed6872); transition:width .2s ease; }
+    .progress-foot { display:flex; justify-content:space-between; gap:10px; margin-top:7px; color:#858c95; font-size:10px; }
+    .status { display:flex; align-items:flex-start; gap:11px; margin-top:13px; padding:13px; border-radius:13px; border:1px solid var(--line); background:rgba(255,255,255,.025); }
+    .status-icon { flex:0 0 28px; width:28px; height:28px; display:grid; place-items:center; border-radius:9px; font-weight:900; background:rgba(255,255,255,.08); }
+    .status h3 { margin:1px 0 4px; font-size:12px; }
+    .status p { margin:0; color:var(--muted); font-size:11px; line-height:1.45; }
+    .status.ok { border-color:rgba(87,197,139,.25); background:rgba(87,197,139,.06); }
+    .status.ok .status-icon { color:var(--green); background:rgba(87,197,139,.13); }
+    .status.warn { border-color:rgba(231,183,90,.28); background:rgba(231,183,90,.06); }
+    .status.warn .status-icon { color:var(--amber); background:rgba(231,183,90,.13); }
+    .status.bad { border-color:rgba(255,111,121,.27); background:rgba(255,111,121,.06); }
+    .status.bad .status-icon { color:var(--danger); background:rgba(255,111,121,.13); }
+    .tolerance { margin-top:13px; padding:13px 14px; border:1px solid var(--line); border-radius:13px; background:rgba(255,255,255,.025); }
+    .tol-line { display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:11px; color:#cfd2d6; }
+    .tol-line strong { color:#fff; font-size:12px; }
+    input[type=range] { width:100%; accent-color:var(--red); margin:12px 0 4px; }
+    .tol-help { color:#7e858e; font-size:10px; line-height:1.4; }
+    .result-actions { display:flex; gap:9px; margin-top:13px; }
+    .result-actions button { flex:1; }
+    details { margin-top:18px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
+    summary { padding:14px 16px; cursor:pointer; font-size:12px; font-weight:800; color:#d7dade; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+    summary::-webkit-details-marker { display:none; }
+    summary::after { content:'+'; color:#e57a83; font-size:18px; line-height:12px; }
+    details[open] summary::after { content:'−'; }
+    .reference { border-top:1px solid var(--line); padding:0 16px 14px; }
+    .reference table { width:100%; border-collapse:collapse; font-size:11px; }
+    .reference th,.reference td { text-align:left; padding:9px 4px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .reference th { color:#8f969e; font-size:10px; font-weight:600; }
+    .reference td:last-child,.reference th:last-child { text-align:right; font-family:ui-monospace,monospace; }
+    .note { margin-top:14px; padding:12px 14px; border-left:3px solid #8e3039; color:#9299a2; font-size:10px; line-height:1.55; background:rgba(255,255,255,.025); border-radius:0 10px 10px 0; }
+    footer { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:22px; color:#666e77; font-size:10px; }
+    .toast { position:fixed; left:50%; bottom:22px; transform:translate(-50%,20px); opacity:0; pointer-events:none; background:#292d32; color:#fff; border:1px solid var(--line); border-radius:10px; padding:11px 15px; font-size:12px; box-shadow:0 10px 35px #0008; transition:.2s; }
+    .toast.show { transform:translate(-50%,0); opacity:1; }
+    @media (max-width:820px) { .layout { grid-template-columns:1fr; } .results { order:2; } }
+    @media (max-width:540px) {
+      .shell { width:calc(100% - 22px); padding-top:18px; }
+      header { margin-bottom:22px; }
+      .mark { width:42px; height:42px; border-radius:12px; }
+      .live-pill { font-size:0; padding:10px; }
+      .live-pill .dot { width:8px; height:8px; }
+      .fields { padding:15px; gap:10px; }
+      .panel-head { padding:17px 16px 14px; }
+      .results { padding:15px; }
+      .field label { font-size:11px; }
+      input[type=number] { padding:12px 10px; font-size:15px; }
+      .input-actions { align-items:stretch; flex-direction:column-reverse; }
+      .input-actions .right { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .input-actions .right button { width:100%; }
+      .result-actions { flex-direction:column; }
+      footer { margin-top:18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">MC</div>
+        <div>
+          <div class="eyebrow">Morro dos Caveiras</div>
+          <h1>Calculadora de Farm</h1>
+        </div>
+      </div>
+      <div class="live-pill"><span class="dot"></span> Cálculo local</div>
+    </header>
+
+    <section class="intro">
+      <div class="eyebrow">Fechamento semanal</div>
+      <p>Digite as quantidades acumuladas dos materiais no print do Discord. A calculadora soma os cinco itens e estima quantas rotas equivalentes foram realizadas.</p>
+    </section>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="inputs-title">
+        <div class="panel-head">
+          <div>
+            <h2 id="inputs-title">Materiais coletados</h2>
+            <p>Informe os valores totais do membro na semana.</p>
+          </div>
+          <span class="step">01 / ENTRADA</span>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label for="aluminio">Alumínio <span class="unit">268 por rota*</span></label>
+            <input id="aluminio" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="0">
+          </div>
+          <div class="field">
+            <label for="cobre">Cobre <span class="unit">254 por rota*</span></label>
+            <input id="cobre" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="0">
+          </div>
+          <div class="field">
+            <label for="plastico">Embalagem plástica <span class="unit">340 por rota*</span></label>
+            <input id="plastico" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="0">
+          </div>
+          <div class="field">
+            <label for="titanio">Titânio <span class="unit">44 por rota*</span></label>
+            <input id="titanio" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="0">
+          </div>
+          <div class="field">
+            <label for="ferro">Ferro <span class="unit">242 por rota*</span></label>
+            <input id="ferro" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="0">
+          </div>
+          <div class="field" style="justify-content:center">
+            <small>*Rendimento aproximado usado como referência. A composição pode variar entre rotas.</small>
+          </div>
+          <div class="input-actions">
+            <button class="btn-link" id="exampleBtn" type="button">Preencher exemplo</button>
+            <div class="right" style="display:flex;gap:8px">
+              <button class="btn-quiet" id="clearBtn" type="button">Limpar</button>
+              <button class="btn-primary" id="calculateBtn" type="button">Calcular rotas</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="results-title">
+        <div class="panel-head">
+          <div>
+            <h2 id="results-title">Resultado do farm</h2>
+            <p>Atualizado automaticamente enquanto você digita.</p>
+          </div>
+          <span class="step">02 / RESULTADO</span>
+        </div>
+        <div class="results" aria-live="polite">
+          <div class="total-box">
+            <div class="label">Total dos cinco materiais</div>
+            <div class="total-value" id="totalValue">0</div>
+            <div class="total-caption">Alumínio + Cobre + Embalagem plástica + Titânio + Ferro</div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="m-label">Rotas equivalentes</div>
+              <div class="m-value" id="equivalentValue">0,00</div>
+              <div class="m-sub">Total ÷ 1.148</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Estimativa mais próxima</div>
+              <div class="m-value" id="estimateValue">0</div>
+              <div class="m-sub">Rotas arredondadas</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Rotas completas</div>
+              <div class="m-value" id="fullRoutesValue">0</div>
+              <div class="m-sub">Sem contar a próxima incompleta</div>
+            </div>
+            <div class="metric">
+              <div class="m-label">Referência de 1 rota</div>
+              <div class="m-value">1.148</div>
+              <div class="m-sub">Unidades somadas</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-top"><span id="progressTitle">Progresso da próxima rota</span><strong id="progressPercent">0%</strong></div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-foot"><span id="progressLeft">0 de 1.148 unidades</span><span id="progressNext">Faltam 1.148</span></div>
+          </div>
+
+          <div class="status" id="statusBox">
+            <div class="status-icon" id="statusIcon">i</div>
+            <div><h3 id="statusTitle">Aguardando valores</h3><p id="statusText">Preencha as quantidades para calcular as rotas.</p></div>
+          </div>
+
+          <div class="tolerance">
+            <div class="tol-line"><span>Tolerância para pequenas variações</span><strong id="toleranceValue">5%</strong></div>
+            <input id="tolerance" type="range" min="0" max="15" step="1" value="5" aria-label="Tolerância de variação em porcentagem">
+            <div class="tol-help">Ajuste o limite para não sinalizar pequenas diferenças como falta ou sobra relevante.</div>
+          </div>
+
+          <div class="result-actions">
+            <button class="btn-quiet" id="copyBtn" type="button">Copiar resultado</button>
+            <button class="btn-quiet" id="resetBtn" type="button">Nova conferência</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <details>
+      <summary>Ver referência dos materiais por rota</summary>
+      <div class="reference">
+        <table>
+          <thead><tr><th>Material</th><th>Referência aproximada</th></tr></thead>
+          <tbody>
+            <tr><td>Alumínio</td><td>268</td></tr>
+            <tr><td>Cobre</td><td>254</td></tr>
+            <tr><td>Embalagem plástica</td><td>340</td></tr>
+            <tr><td>Titânio</td><td>44</td></tr>
+            <tr><td>Ferro</td><td>242</td></tr>
+            <tr><td><strong>Total por rota</strong></td><td><strong>1.148</strong></td></tr>
+          </tbody>
+        </table>
+        <div class="note">A referência de 1.148 unidades é uma média aproximada da rota. A calculadora considera o total combinado dos cinco materiais, pois cada item pode variar um pouco de uma rota para outra.</div>
+      </div>
+    </details>
+
+    <div class="note"><strong>Não entram na contagem:</strong> Gasolina, Dinheiro Sujo e C4. <br>Os cálculos são feitos neste navegador. Os valores digitados não são enviados para um servidor nem ficam salvos como histórico.</div>
+
+    <footer>
+      <span>CONTROLE DE FARM · MORRO DOS CAVEIRAS</span>
+      <span>Calculadora simples · Sem login · Sem banco de dados</span>
+    </footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const ROUTE_TOTAL = 1148;
+      const TOLERANCE_DEFAULT = 5;
+      const fields = ["aluminio", "cobre", "plastico", "titanio", "ferro"];
+      const $ = (id) => document.getElementById(id);
+      const number = (id) => {
+        const value = Number($(id).value);
+        return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+      };
+      const formatInt = (value) => Math.round(value).toLocaleString("pt-BR");
+      const formatDec = (value) => value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      let latest = null;
+      let toastTimer;
+
+      function notify(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function setStatus(kind, icon, title, text) {
+        const box = $("statusBox");
+        box.className = `status ${kind || ""}`.trim();
+        $("statusIcon").textContent = icon;
+        $("statusTitle").textContent = title;
+        $("statusText").textContent = text;
+      }
+
+      function calculate() {
+        const values = Object.fromEntries(fields.map((id) => [id, number(id)]));
+        const total = Object.values(values).reduce((sum, value) => sum + value, 0);
+        const equivalent = total / ROUTE_TOTAL;
+        const fullRoutes = Math.floor(equivalent);
+        const remainder = total % ROUTE_TOTAL;
+        const progress = remainder / ROUTE_TOTAL;
+        const roundedRoutes = Math.round(equivalent);
+        const tolerancePct = Number($("tolerance").value);
+        const toleranceUnits = roundedRoutes > 0 ? roundedRoutes * ROUTE_TOTAL * tolerancePct / 100 : 0;
+        const target = roundedRoutes * ROUTE_TOTAL;
+        const difference = total - target;
+        const fractional = equivalent - Math.floor(equivalent);
+        const ambiguous = total > 0 && roundedRoutes > 0 && fractional >= 0.45 && fractional <= 0.55;
+
+        $("totalValue").textContent = formatInt(total);
+        $("equivalentValue").textContent = formatDec(equivalent);
+        $("estimateValue").textContent = formatInt(roundedRoutes);
+        $("fullRoutesValue").textContent = formatInt(fullRoutes);
+        $("progressPercent").textContent = `${Math.round(progress * 100)}%`;
+        $("progressFill").style.width = `${Math.min(100, progress * 100)}%`;
+        $("progressLeft").textContent = `${formatInt(remainder)} de ${formatInt(ROUTE_TOTAL)} unidades`;
+        $("progressNext").textContent = remainder === 0 ? "Rota completa" : `Faltam ${formatInt(ROUTE_TOTAL - remainder)}`;
+
+        if (total === 0) {
+          setStatus("", "i", "Aguardando valores", "Preencha as quantidades para calcular as rotas.");
+        } else if (equivalent < 0.5) {
+          const missing = ROUTE_TOTAL - total;
+          setStatus("warn", "…", "Rota em andamento", `Ainda não completou uma rota. Faltam aproximadamente ${formatInt(missing)} unidades para atingir a referência de 1 rota.`);
+        } else if (ambiguous) {
+          setStatus("warn", "!", "Conferir estimativa", `O total está próximo do meio entre ${fullRoutes} e ${fullRoutes + 1} rotas. Há ${formatInt(Math.abs(difference))} unidades de diferença para a referência mais próxima; confira o print.`);
+        } else if (Math.abs(difference) <= toleranceUnits) {
+          setStatus("ok", "✓", "Dentro da variação", `O total está dentro da tolerância de ${tolerancePct}% para ${roundedRoutes} rotas. Diferença: ${difference > 0 ? "+" : ""}${formatInt(difference)} unidades.`);
+        } else if (difference < 0) {
+          setStatus("bad", "!", "Faltando material", `Faltam ${formatInt(Math.abs(difference))} unidades para atingir a referência de ${roundedRoutes} rotas. Limite de tolerância: ${formatInt(toleranceUnits)} unidades.`);
+        } else {
+          setStatus("warn", "+", "Acima do esperado", `Há ${formatInt(difference)} unidades acima da referência de ${roundedRoutes} rotas. Limite de tolerância: ${formatInt(toleranceUnits)} unidades.`);
+        }
+
+        latest = { values, total, equivalent, fullRoutes, roundedRoutes, remainder, progress, difference, target, tolerancePct, toleranceUnits, ambiguous };
+      }
+
+      fields.forEach((id) => $(id).addEventListener("input", calculate));
+      $("tolerance").addEventListener("input", () => {
+        $("toleranceValue").textContent = `${$("tolerance").value}%`;
+        calculate();
+      });
+      $("calculateBtn").addEventListener("click", calculate);
+      function clearFields() {
+        fields.forEach((id) => $(id).value = "0");
+        $("tolerance").value = String(TOLERANCE_DEFAULT);
+        $("toleranceValue").textContent = `${TOLERANCE_DEFAULT}%`;
+        calculate();
+      }
+      $("clearBtn").addEventListener("click", clearFields);
+      $("resetBtn").addEventListener("click", () => { clearFields(); notify("Calculadora pronta para uma nova conferência."); });
+      $("exampleBtn").addEventListener("click", () => {
+        const example = { aluminio: 918, cobre: 946, plastico: 1160, titanio: 180, ferro: 922 };
+        Object.entries(example).forEach(([id, value]) => $(id).value = String(value));
+        calculate();
+        notify("Exemplo preenchido: 4.126 materiais.");
+      });
+      $("copyBtn").addEventListener("click", async () => {
+        if (!latest || latest.total === 0) return notify("Preencha os materiais primeiro.");
+        const l = latest;
+        let status;
+        if (l.equivalent < 0.5) status = `Rota em andamento — faltam ${formatInt(ROUTE_TOTAL - l.total)} para 1 rota.`;
+        else if (l.ambiguous) status = "Conferir estimativa — total próximo do meio entre duas quantidades de rotas.";
+        else if (Math.abs(l.difference) <= l.toleranceUnits) status = `Dentro da variação para ${l.roundedRoutes} rotas.`;
+        else if (l.difference < 0) status = `Faltando material: ${formatInt(Math.abs(l.difference))} unidades para ${l.roundedRoutes} rotas.`;
+        else status = `Acima do esperado: ${formatInt(l.difference)} unidades para ${l.roundedRoutes} rotas.`;
+        const text = [
+          "CONTROLE DE FARM — MORRO DOS CAVEIRAS",
+          `Alumínio: ${formatInt(l.values.aluminio)}`,
+          `Cobre: ${formatInt(l.values.cobre)}`,
+          `Embalagem plástica: ${formatInt(l.values.plastico)}`,
+          `Titânio: ${formatInt(l.values.titanio)}`,
+          `Ferro: ${formatInt(l.values.ferro)}`,
+          `Total: ${formatInt(l.total)}`,
+          `Rotas equivalentes: ${formatDec(l.equivalent)}`,
+          `Rotas completas: ${l.fullRoutes}`,
+          `Estimativa mais próxima: ${l.roundedRoutes}`,
+          status,
+        ].join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          notify("Resultado copiado.");
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); ta.remove(); notify("Resultado copiado.");
+        }
+      });
+      calculate();
+    })();
+  </script>
+</body>
+</html>
